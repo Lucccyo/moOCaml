@@ -1,6 +1,6 @@
 (executable
  (public_name moOCaml)
  (name main)
- (libraries dllist)
+ (libraries cow)
  (flags
   (:standard -warn-error -37 -w -37)))
