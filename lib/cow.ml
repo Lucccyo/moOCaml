@@ -187,4 +187,4 @@ let exec_prog p s =
   { s with stdout = List.rev s.stdout }
 
 let init_state l =
-  { memory = Dllist.create 0; stdin = l; stdout = []; buffer = None }
+  { memory = Dllist.init 0; stdin = l; stdout = []; buffer = None }

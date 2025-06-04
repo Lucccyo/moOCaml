@@ -2,8 +2,11 @@ type t
 
 val pp : t -> unit
 
-val create : int -> t
-(** [create v] creates an double linked list with [v] as value. *)
+val create : t -> int -> t -> t
+(** [create prev v next] creates a double linked list with [v] as value and [prev] and [next] as neighbours. *)
+
+val init : int -> t
+(** [init v] initialise a double linked list with [v] as value. *)
 
 val value : t -> int
 (** Returns the current cell's value. *)

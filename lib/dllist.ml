@@ -1,6 +1,6 @@
 type t =
   | Empty
-  | Cell of { mutable prev : t; mutable v : int; mutable next : t }
+  | Cell of { mutable prev : t; v : int; mutable next : t }
 
 let rec pp_prevs t =
   match t with
@@ -25,21 +25,23 @@ let pp t =
       pp_nexts c.next;
       Format.printf "@."
 
-let create v = Cell { prev = Empty; v; next = Empty }
+let create prev v next = Cell { prev; v; next }
+
+let init v = create Empty v Empty
+
 let value t = match t with Empty -> failwith "Dllist is Empty" | Cell c -> c.v
 
 let set t x =
   match t with
   | Empty -> failwith "Dllist is Empty"
   | Cell c ->
-      c.v <- x;
-      t
+      create c.prev x c.next
 
 let prev t x =
   match t with
-  | Empty -> create x
+  | Empty -> init x
   | Cell { prev = Empty; _ } -> (
-      let new_cell = create x in
+      let new_cell = init x in
       match new_cell with
       | Empty -> assert false
       | Cell c ->
@@ -52,9 +54,9 @@ let prev t x =
 
 let next t x =
   match t with
-  | Empty -> create x
+  | Empty -> init x
   | Cell { next = Empty; _ } -> (
-      let new_cell = create x in
+      let new_cell = init x in
       match new_cell with
       | Empty -> assert false
       | Cell nc ->
@@ -69,12 +71,10 @@ let incr t =
   match t with
   | Empty -> failwith "Dllist is Empty"
   | Cell c ->
-      c.v <- c.v + 1;
-      t
+      create c.prev (c.v + 1) c.next
 
 let decr t =
   match t with
   | Empty -> failwith "Dllist is Empty"
   | Cell c ->
-      c.v <- c.v - 1;
-      t
+      create c.prev (c.v - 1) c.next
