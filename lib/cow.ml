@@ -39,7 +39,7 @@ type instr =
       *)
 
 type state = {
-  memory : Dllist.t;
+  memory : int Zipper.t;
   stdin : int list;
   stdout : char list;
   buffer : int option;
@@ -60,7 +60,7 @@ let pp_state (s : state) : unit =
     | None -> Format.printf "%s: None@." label
     | Some x -> Format.printf "%s: Some %d@." label x
   in
-  Dllist.pp s.memory;
+  (* Zipper.pp s.memory; *)
   show_int_list "stdin" s.stdin;
   show_char_list "stdout" s.stdout;
   show_option "buffer" s.buffer;
@@ -117,19 +117,19 @@ let rec exec_prog p pc s jumps =
     let next_pc, new_state =
       match i with
       | IMOO ->
-          if Dllist.value s.memory = 0 then (Hashtbl.find jumps pc, s)
+          if Zipper.value s.memory = 0 then (Hashtbl.find jumps pc, s)
           else (pc + 1, s)
       | Imoo ->
-          if Dllist.value s.memory <> 0 then (Hashtbl.find jumps pc, s)
+          if Zipper.value s.memory <> 0 then (Hashtbl.find jumps pc, s)
           else (pc + 1, s)
-      | ImOo -> (pc + 1, { s with memory = Dllist.prev s.memory 0 })
-      | ImoO -> (pc + 1, { s with memory = Dllist.next s.memory 0 })
+      | ImOo -> (pc + 1, { s with memory = Zipper.prev s.memory 0 })
+      | ImoO -> (pc + 1, { s with memory = Zipper.next s.memory 0 })
       | IMoo ->
-          let memory_v = Dllist.value s.memory in
+          let memory_v = Zipper.value s.memory in
           if memory_v = 0 then
             ( pc + 1,
               {
-                memory = Dllist.set s.memory (List.hd s.stdin);
+                memory = Zipper.set s.memory (List.hd s.stdin);
                 stdin = List.tl s.stdin;
                 stdout = s.stdout;
                 buffer = s.buffer;
@@ -142,38 +142,38 @@ let rec exec_prog p pc s jumps =
                 stdout = int_to_ascii memory_v :: s.stdout;
                 buffer = s.buffer;
               } )
-      | IMOo -> (pc + 1, { s with memory = Dllist.decr s.memory })
-      | IMoO -> (pc + 1, { s with memory = Dllist.incr s.memory })
+      | IMOo -> (pc + 1, { s with memory = Zipper.decr s.memory })
+      | IMoO -> (pc + 1, { s with memory = Zipper.incr s.memory })
       | ImOO -> (
-          match int_to_instr (Dllist.value s.memory) with
+          match int_to_instr (Zipper.value s.memory) with
           | Some inst ->
               let temp_state = exec_prog [ inst ] 0 s jumps in
               (pc + 1, temp_state)
           | None -> (pc + 1, s))
-      | IOOO -> (pc + 1, { s with memory = Dllist.set s.memory 0 })
+      | IOOO -> (pc + 1, { s with memory = Zipper.set s.memory 0 })
       | IMMM -> (
           match s.buffer with
           | Some e ->
               ( pc + 1,
                 {
-                  memory = Dllist.set s.memory e;
+                  memory = Zipper.set s.memory e;
                   stdin = s.stdin;
                   stdout = s.stdout;
                   buffer = None;
                 } )
-          | None -> (pc + 1, { s with buffer = Some (Dllist.value s.memory) }))
+          | None -> (pc + 1, { s with buffer = Some (Zipper.value s.memory) }))
       | IOOM ->
           ( pc + 1,
             {
               s with
-              stdout = int_to_intchar_list (Dllist.value s.memory) @ s.stdout;
+              stdout = int_to_intchar_list (Zipper.value s.memory) @ s.stdout;
             } )
       | Ioom ->
           if s.stdin = [] then failwith "Stdin is empty, unable to read";
           let e = List.hd s.stdin in
           ( pc + 1,
             {
-              memory = Dllist.set s.memory e;
+              memory = Zipper.set s.memory e;
               stdin = List.tl s.stdin;
               stdout = s.stdout;
               buffer = None;
@@ -187,4 +187,4 @@ let exec_prog p s =
   { s with stdout = List.rev s.stdout }
 
 let init_state l =
-  { memory = Dllist.init 0; stdin = l; stdout = []; buffer = None }
+  { memory = Zipper.init 0; stdin = l; stdout = []; buffer = None }
